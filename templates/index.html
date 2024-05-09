@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Download GitHub Repository as Text | Code Breakdown for LLMs</title>
+  <meta name="description"
+    content="Download the contents of a GitHub repository as a ZIP file containing text files for each folder. Break down code sections to provide to LLMs with token limits.">
+  <meta name="keywords"
+    content="GitHub repository, download as text, code breakdown, LLMs, token limits, code examples, programming, developer tools">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@latest/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn-disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .card {
+      background-color: #fff;
+      border-radius: 0.5rem;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      padding: 1.5rem;
+    }
+
+    .icon {
+      font-size: 2.25rem;
+      margin-right: 0.25em;
+      vertical-align: middle;
+    }
+
+    h3 {
+      vertical-align: middle;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 text-gray-800">
+  <div class="container mx-auto px-4 py-8">
+    
+    <h1 class="text-4xl font-bold mb-6">Download GitHub Repository as Text</h1>
+    <p class="text-xl mb-8">Break down code sections into manageable chunks for Language Models (LLMs) with
+      token limits.</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-6 gap-8">
+      <div class="md:col-span-3">
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+          <h2 class="text-2xl font-bold mb-4">How to Use</h2>
+          <ol class="list-decimal pl-6 mb-6 space-y-4">
+            <li>Choose one of the following options:</li>
+            <ul class="list-disc pl-6 mb-4 space-y-2">
+              <li>Enter the URL of the GitHub repository you want to download</li>
+              <li>Upload a ZIP file of a repository from your local machine</li>
+            </ul>
+            <li>Click the "Download" or "Upload" button to start the process</li>
+            <li>The tool will process the repository, extract the code, and generate text files for each folder</li>
+            <li>A ZIP file containing the text files will be automatically downloaded</li>
+            <li>Extract the ZIP file and use the text files to provide code examples to LLMs</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="md:col-span-3">
+        <div class="card mb-8">
+          <h3 class="text-xl font-bold mb-4 text-center"><i class="fab fa-github icon"></i> Download from GitHub</h3>
+          <form id="downloadForm">
+            <div class="mb-4">
+              <label for="githubUrl" class="block mb-2 font-bold">GitHub Repository URL:</label>
+              <input type="text" id="githubUrl" name="githubUrl"
+                class="w-full px-4 py-2 border border-gray-300 rounded-md"
+                placeholder="https://github.com/username/repository">
+            </div>
+            <button type="submit" id="downloadBtn"
+              class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Download</button>
+          </form>
+        </div>
+
+        <div class="card">
+
+          <h3 class="text-xl font-bold mb-4 text-center"><i class="fas fa-file-archive icon"></i> Upload ZIP File</h3>
+          <form id="uploadForm">
+            <div class="mb-4">
+              <label for="zipFile" class="block mb-2 font-bold">Select a ZIP File:</label>
+              <input type="file" id="zipFile" name="zipFile" class="w-full px-4 py-2 border border-gray-300 rounded-md"
+                accept=".zip">
+            </div>
+            <button type="submit" id="uploadBtn"
+              class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">Upload</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div id="modal" class="fixed z-10 inset-0 overflow-y-auto hidden">
+      <div class="flex items-center justify-center min-h-screen">
+        <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm mx-auto">
+          <div id="modalContent"></div>
+          <button id="modalClose"
+            class="mt-4 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-10 mb-8 text-center text-sm">Heart &amp; Sol. 2024</div>
+  </div>
+
+
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      document.getElementById('downloadForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var githubUrl = document.getElementById('githubUrl').value;
+        var downloadBtn = document.getElementById('downloadBtn');
+
+        downloadBtn.disabled = true;
+        downloadBtn.classList.add('btn-disabled');
+
+        var startTime = Date.now();
+
+        fetch('/api/download_github_repo', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ url: githubUrl })
+        })
+          .then(function (response) {
+            if (response.ok) {
+              return response.blob();
+            } else {
+              throw new Error('Error downloading the repository.');
+            }
+          })
+          .then(function (blob) {
+            var endTime = Date.now();
+            var timeTaken = endTime - startTime;
+
+            var url = window.URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = githubUrl.split('/').pop() + '_as_text.zip';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+
+            showModal('Repository downloaded successfully!<br>Processing time: ' + timeTaken + 'ms');
+            downloadBtn.disabled = false;
+            downloadBtn.classList.remove('btn-disabled');
+          })
+          .catch(function (error) {
+            console.error('Error:', error);
+            showModal('An error occurred while downloading the repository.');
+            downloadBtn.disabled = false;
+            downloadBtn.classList.remove('btn-disabled');
+          });
+      });
+
+      document.getElementById('uploadForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var zipFile = document.getElementById('zipFile').files[0];
+        var uploadBtn = document.getElementById('uploadBtn');
+
+        if (!zipFile) {
+          showModal('Please select a ZIP file.');
+          return;
+        }
+
+        uploadBtn.disabled = true;
+        uploadBtn.classList.add('btn-disabled');
+
+        var startTime = Date.now();
+
+        // Create a new FormData object and append the ZIP file
+        var formData = new FormData();
+        formData.append('zipFile', zipFile);
+
+        fetch('/api/process_zip_file', {
+          method: 'POST',
+          body: formData
+        })
+          .then(function (response) {
+            if (response.ok) {
+              return response.blob();
+            } else {
+              throw new Error('Error processing the ZIP file.');
+            }
+          })
+          .then(function (blob) {
+            var endTime = Date.now();
+            var timeTaken = endTime - startTime;
+
+            var url = window.URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'processed_' + zipFile.name.replace('.zip', '') + '_as_text.zip';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+
+            showModal('ZIP file processed successfully!<br>Processing time: ' + timeTaken + 'ms');
+            uploadBtn.disabled = false;
+            uploadBtn.classList.remove('btn-disabled');
+          })
+          .catch(function (error) {
+            console.error('Error:', error);
+            showModal('An error occurred while processing the ZIP file.');
+            uploadBtn.disabled = false;
+            uploadBtn.classList.remove('btn-disabled');
+          });
+      });
+
+      function showModal(message) {
+        document.getElementById('modalContent').innerHTML = message;
+        document.getElementById('modal').classList.remove('hidden');
+      }
+
+      document.getElementById('modalClose').addEventListener('click', function () {
+        document.getElementById('modal').classList.add('hidden');
+      });
+    });
+  </script>
+</body>
+
+</html>
